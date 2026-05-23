@@ -1,13 +1,16 @@
-FROM mambaorg/micromamba:1.5.10
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER environment.yml /app/environment.yml
-RUN micromamba create -y -n app -f /app/environment.yml \
-  && micromamba clean --all --yes
+# Install only what's needed for `pip install -e .` to resolve.
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY scripts ./scripts
 
-ENV MAMBA_DOCKERFILE_ACTIVATE=1
-SHELL ["/bin/bash", "-lc"]
+RUN pip install --no-cache-dir -e .
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER . /app
-CMD ["micromamba", "run", "-n", "app", "python", "-m", "scripts.run_cli"]
+# Run as a non-root user.
+RUN useradd --create-home --shell /bin/bash curius && chown -R curius:curius /app
+USER curius
+
+ENTRYPOINT ["curius"]

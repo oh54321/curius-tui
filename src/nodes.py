@@ -311,7 +311,7 @@ class User:
 
         return [UserGraph.get_user(item.user_link) for item in self.following_users]
 
-    @cached_property
+    @property
     def is_expanded(self) -> bool:
         return self._is_expanded
 
